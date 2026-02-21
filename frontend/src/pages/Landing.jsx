@@ -1,14 +1,28 @@
 // Landing.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import './landing.css';
+import FindVegetables from './Find-vegs';
 import skuma from '../assets/fresh-sukuma.png'
+
 function Landing() {
+    const [market, setMarket] = useState(false);
+
     const products = [
         { id: 1, name: 'Fresh Sukuma', price: '50 KES', farmer: 'Joseph Mwangi', location: 'Kiambu' },
         { id: 2, name: 'Organic Sukuma', price: '60 KES', farmer: 'Grace Akinyi', location: 'Kisumu' },
         { id: 3, name: 'Premium Sukuma', price: '45 KES', farmer: 'Peter Omondi', location: 'Nakuru' },
         { id: 4, name: 'Giant Sukuma', price: '70 KES', farmer: 'Mary Wanjiku', location: 'Nyeri' },
     ];
+
+    // Function to go back to landing page
+    const handleBackToLanding = () => {
+        setMarket(false);
+    };
+
+    if (market) {
+        // Pass the back function as a prop to FindVegetables
+        return <FindVegetables onBack={handleBackToLanding} />;
+    }
 
     return (
         <main className="landing">
@@ -23,15 +37,17 @@ function Landing() {
                             Connecting Mama Mboga with trusted farmers at fair prices.
                         </p>
                         <div className="hero-buttons">
-                            <button className="button button-primary">Find Vegetables</button>
+                            <button
+                                onClick={() => setMarket(true)}
+                                className="button button-primary"
+                            >
+                                Find Vegetables
+                            </button>
                             <button className="button button-secondary">Sell Your Produce</button>
                         </div>
                     </div>
                     <div className="hero-image">
-                        
                         <img src={skuma} alt="kales" className="image-placeholder hero-placeholder" />
-                        
-                        
                     </div>
                 </div>
             </section>
