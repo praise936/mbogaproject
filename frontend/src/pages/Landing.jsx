@@ -1,6 +1,6 @@
 // Landing.jsx
 import React from 'react';
-import './Landing.css';
+import './landing.css';
 import skuma from '../assets/fresh-sukuma.png'
 function Landing() {
     const products = [
