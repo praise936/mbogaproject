@@ -10,7 +10,7 @@ function Navbar() {
             <div className="navbar-container">
                 <div className="navbar-logo">
                     <span className="logo-emoji" role="img" aria-label="vegetable">🥬</span>
-                    <span className="logo-text">FarmLink</span>
+                    <span className="logo-text">Agri Hub</span>
                 </div>
 
                 <button
