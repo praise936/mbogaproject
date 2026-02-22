@@ -1,11 +1,11 @@
 // Landing.jsx
-import React, { useState } from 'react';
+import React from 'react';
 import './landing.css';
-import FindVegetables from './Find-vegs';
-import skuma from '../assets/fresh-sukuma.png'
+import skuma from '../assets/fresh-sukuma.png';
+import { useNavigate } from 'react-router-dom';
 
 function Landing() {
-    const [market, setMarket] = useState(false);
+    const navigate = useNavigate();
 
     const products = [
         { id: 1, name: 'Fresh Sukuma', price: '50 KES', farmer: 'Joseph Mwangi', location: 'Kiambu' },
@@ -13,16 +13,6 @@ function Landing() {
         { id: 3, name: 'Premium Sukuma', price: '45 KES', farmer: 'Peter Omondi', location: 'Nakuru' },
         { id: 4, name: 'Giant Sukuma', price: '70 KES', farmer: 'Mary Wanjiku', location: 'Nyeri' },
     ];
-
-    // Function to go back to landing page
-    const handleBackToLanding = () => {
-        setMarket(false);
-    };
-
-    if (market) {
-        // Pass the back function as a prop to FindVegetables
-        return <FindVegetables onBack={handleBackToLanding} />;
-    }
 
     return (
         <main className="landing">
@@ -38,16 +28,21 @@ function Landing() {
                         </p>
                         <div className="hero-buttons">
                             <button
-                                onClick={() => setMarket(true)}
+                                onClick={() => navigate('/market')}  // FIXED: Arrow function
                                 className="button button-primary"
                             >
                                 Find Vegetables
                             </button>
-                            <button className="button button-secondary">Sell Your Produce</button>
+                            <button
+                                onClick={() => navigate('/sell')}  // FIXED: Added navigation
+                                className="button button-secondary"
+                            >
+                                Sell Your Produce
+                            </button>
                         </div>
                     </div>
                     <div className="hero-image">
-                        <img src={skuma} alt="kales" className="image-placeholder hero-placeholder" />
+                        <img src={skuma} alt="Fresh sukuma/kales" className="image-placeholder hero-placeholder" />
                     </div>
                 </div>
             </section>
@@ -116,7 +111,12 @@ function Landing() {
                                     <p className="product-price">{product.price} per bundle</p>
                                     <p className="product-farmer">Farmer: {product.farmer}</p>
                                     <p className="product-location">📍 {product.location}</p>
-                                    <button className="button button-primary order-button">Order Now</button>
+                                    <button
+                                        onClick={() => navigate(`/product/${product.id}`)}  // FIXED: Added navigation
+                                        className="button button-primary order-button"
+                                    >
+                                        Order Now
+                                    </button>
                                 </div>
                             </div>
                         ))}
@@ -155,8 +155,18 @@ function Landing() {
                     <div className="cta-content">
                         <h2 className="cta-title">Start Buying Fresh Sukuma Today</h2>
                         <div className="cta-buttons">
-                            <button className="button button-light">Join as Mama Mboga</button>
-                            <button className="button button-light">Join as Farmer</button>
+                            <button
+                                onClick={() => navigate('/join/mamamboga')}  // FIXED: Added navigation
+                                className="button button-light"
+                            >
+                                Join as Mama Mboga
+                            </button>
+                            <button
+                                onClick={() => navigate('/join/farmer')}  // FIXED: Added navigation
+                                className="button button-light"
+                            >
+                                Join as Farmer
+                            </button>
                         </div>
                     </div>
                 </div>

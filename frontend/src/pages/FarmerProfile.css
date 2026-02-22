@@ -1,0 +1,501 @@
+/* FarmerProfile.css */
+
+/* Container Styles */
+.profile-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f0f9f0 0%, #e8f5e9 100%);
+    padding: 2rem 1rem;
+}
+
+@media (min-width: 640px) {
+    .profile-container {
+        padding: 2rem 1.5rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .profile-container {
+        padding: 2rem 2rem;
+    }
+}
+
+.profile-wrapper {
+    max-width: 64rem;
+    margin: 0 auto;
+}
+
+/* Loading Styles */
+.profile-loading-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f0f9f0 0%, #e8f5e9 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loading-content {
+    text-align: center;
+}
+
+.spinner {
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    border-bottom-color: #059669;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-text {
+    color: #4b5563;
+    font-size: 1.125rem;
+}
+
+/* Error Styles */
+.profile-error-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f0f9f0 0%, #e8f5e9 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.error-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    max-width: 28rem;
+    width: 100%;
+    text-align: center;
+}
+
+.error-icon {
+    background: #fee2e2;
+    border-radius: 9999px;
+    width: 4rem;
+    height: 4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    color: #dc2626;
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.error-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+}
+
+.error-message {
+    color: #4b5563;
+    margin-bottom: 1rem;
+}
+
+.retry-button {
+    background: #059669;
+    color: white;
+    padding: 0.5rem 1.5rem;
+    border-radius: 0.5rem;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.2s;
+}
+
+.retry-button:hover {
+    background: #047857;
+}
+
+/* Header Styles */
+.profile-header {
+    margin-bottom: 2rem;
+}
+
+.profile-title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+}
+
+.profile-subtitle {
+    color: #4b5563;
+    font-size: 1.125rem;
+}
+
+/* Profile Card Styles */
+.profile-card {
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.cover-photo {
+    height: 12rem;
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    position: relative;
+}
+
+.cover-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-info-section {
+    padding: 0 2rem 2rem;
+}
+
+.profile-picture-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-top: -4rem;
+    margin-bottom: 1.5rem;
+}
+
+.profile-picture-wrapper {
+    position: relative;
+}
+
+.profile-picture {
+    width: 8rem;
+    height: 8rem;
+    border-radius: 0.75rem;
+    border: 4px solid white;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    background: white;
+}
+
+.profile-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-placeholder {
+    width: 100%;
+    height: 100%;
+    background: #d1fae5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.placeholder-icon {
+    color: #059669;
+}
+
+.camera-button {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background: white;
+    padding: 0.5rem;
+    border-radius: 9999px;
+    border: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+}
+
+.camera-button:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.camera-icon {
+    color: #059669;
+}
+
+.edit-profile-button {
+    margin-top: 3rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #059669;
+    color: white;
+    padding: 0.5rem 1.5rem;
+    border-radius: 0.5rem;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.edit-profile-button:hover {
+    background: #047857;
+}
+
+/* Name Section Styles */
+.name-section {
+    margin-bottom: 1.5rem;
+}
+
+.name-badge-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.farmer-name {
+    font-size: 1.875rem;
+    font-weight: bold;
+    color: #1f2937;
+}
+
+.verified-badge {
+    background: #d1fae5;
+    color: #065f46;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.farmer-id {
+    color: #6b7280;
+    font-size: 1.125rem;
+}
+
+/* Info Grid Styles */
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+@media (min-width: 768px) {
+    .info-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.info-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: #f9fafb;
+    border-radius: 0.75rem;
+}
+
+.info-icon-wrapper {
+    background: #d1fae5;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+}
+
+.info-icon {
+    color: #059669;
+}
+
+.info-label {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 0.25rem;
+}
+
+.info-value {
+    font-size: 1.125rem;
+    font-weight: 500;
+    color: #1f2937;
+}
+
+/* About Section Styles */
+.about-section {
+    border-top: 1px solid #e5e7eb;
+    padding-top: 1.5rem;
+}
+
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 1rem;
+}
+
+.bio-text {
+    color: #4b5563;
+    line-height: 1.625;
+    margin-bottom: 1.5rem;
+}
+
+.meta-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+@media (min-width: 640px) {
+    .meta-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #4b5563;
+}
+
+.meta-icon {
+    color: #059669;
+}
+
+/* Products Section Styles */
+.products-card {
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    padding: 2rem;
+}
+
+.products-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+
+.products-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.view-all-link {
+    color: #059669;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.view-all-link:hover {
+    color: #047857;
+}
+
+.products-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+}
+
+@media (min-width: 640px) {
+    .products-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1024px) {
+    .products-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.product-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+}
+
+.product-card:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.product-image {
+    width: 100%;
+    height: 12rem;
+    object-fit: cover;
+}
+
+.product-details {
+    padding: 1rem;
+}
+
+.product-name {
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+}
+
+.product-description {
+    color: #4b5563;
+    font-size: 0.875rem;
+    margin-bottom: 0.75rem;
+}
+
+.product-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.product-price {
+    color: #059669;
+    font-weight: bold;
+}
+
+.product-quantity {
+    color: #6b7280;
+    font-size: 0.875rem;
+}
+
+/* Empty Products Styles */
+.empty-products {
+    text-align: center;
+    padding: 3rem;
+    background: #f9fafb;
+    border-radius: 0.75rem;
+}
+
+.empty-icon {
+    color: #9ca3af;
+    margin: 0 auto 1rem;
+}
+
+.empty-text {
+    color: #6b7280;
+    font-size: 1.125rem;
+    margin-bottom: 1rem;
+}
+
+.add-product-button {
+    background: #059669;
+    color: white;
+    padding: 0.5rem 1.5rem;
+    border-radius: 0.5rem;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.add-product-button:hover {
+    background: #047857;
+}

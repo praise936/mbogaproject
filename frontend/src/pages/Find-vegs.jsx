@@ -1,162 +1,108 @@
 // FindVegetables.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './findVegetables.css';
-import sukumaImage from '../assets/fresh-sukuma.png';
-// import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
-function FindVegetables( { onBack}) {
-    // const navigate = useNavigate();
+function FindVegetables({ onBack }) {
+    const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [cart, setCart] = useState([]);
     const [showCart, setShowCart] = useState(false);
-
-    // Expanded product database
-    const products = [
-        {
-            id: 1,
-            name: 'Fresh Sukuma',
-            price: 50,
-            farmer: 'Dorcas Agwenge',
-            location: 'kesses',
-            rating: 4.8,
-            orders: 234,
-            category: 'kales',
-            image: sukumaImage,
-            unit: 'bundle',
-            minOrder: 5,
-            available: true,
-            description: 'Crispy, fresh sukuma wiki harvested this morning'
-        },
-        {
-            id: 2,
-            name: 'Organic Sukuma',
-            price: 60,
-            farmer: 'kelly',
-            location: 'chebarus',
-            rating: 4.9,
-            orders: 189,
-            category: 'kales',
-            image: sukumaImage,
-            unit: 'bundle',
-            minOrder: 3,
-            available: true,
-            description: 'Certified organic sukuma, no pesticides'
-        },
-        {
-            id: 3,
-            name: 'Premium Sukuma',
-            price: 45,
-            farmer: 'Peter praise',
-            location: 'mabs',
-            rating: 4.7,
-            orders: 312,
-            category: 'kales',
-            image: sukumaImage,
-            unit: 'bundle',
-            minOrder: 4,
-            available: true,
-            description: 'Large leaf sukuma, perfect for daily sales'
-        },
-        {
-            id: 4,
-            name: 'Giant Sukuma',
-            price: 70,
-            farmer: 'Harzel Adwet',
-            location: 'Kisumu',
-            rating: 4.9,
-            orders: 156,
-            category: 'kales',
-            image: sukumaImage,
-            unit: 'bundle',
-            minOrder: 2,
-            available: true,
-            description: 'Extra large bundles, great value for money'
-        },
-        {
-            id: 5,
-            name: 'Traditional Sukuma',
-            price: 55,
-            farmer: 'Viera man',
-            location: 'Eldoret',
-            rating: 4.6,
-            orders: 98,
-            category: 'kales',
-            image: sukumaImage,
-            unit: 'bundle',
-            minOrder: 5,
-            available: true,
-            description: 'Traditional variety, rich in flavor'
-        },
-        {
-            id: 6,
-            name: 'Morning Harvest Sukuma',
-            price: 65,
-            farmer: 'Lucy Wairimu',
-            location: 'Kesses',
-            rating: 5.0,
-            orders: 45,
-            category: 'kales',
-            image: sukumaImage,
-            unit: 'bundle',
-            minOrder: 3,
-            available: true,
-            description: 'Harvested at dawn, delivered fresh'
-        },
-        // Additional vegetables for variety
-        {
-            id: 7,
-            name: 'Fresh Spinach',
-            price: 40,
-            farmer: 'Mercy masika',
-            location: 'kajiado',
-            rating: 4.7,
-            orders: 167,
-            category: 'spinach',
-            image: sukumaImage,
-            unit: 'bundle',
-            minOrder: 3,
-            available: true,
-            description: 'Tender spinach leaves, perfect for salads'
-        },
-        {
-            id: 8,
-            name: 'Organic Cabbage',
-            price: 80,
-            farmer: 'Sarah Chebet',
-            location: 'moi',
-            rating: 4.8,
-            orders: 203,
-            category: 'cabbage',
-            image: sukumaImage,
-            unit: 'piece',
-            minOrder: 2,
-            available: true,
-            description: 'Large, dense cabbages from organic farm'
-        }
-    ];
+    const [products, setProducts] = useState([]);
+    const [farmers, setFarmers] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [selectedLocation, setSelectedLocation] = useState('all');
 
     const categories = [
         { id: 'all', name: 'All Vegetables', icon: '🌿' },
-        { id: 'kales', name: 'Sukuma Wiki', icon: '🥬' },
-        { id: 'spinach', name: 'Spinach', icon: '🌱' },
-        { id: 'cabbage', name: 'Cabbage', icon: '🥬' },
-        { id: 'tomatoes', name: 'Tomatoes', icon: '🍅' },
+        { id: 'Sukuma', name: 'Sukuma Wiki', icon: '🥬' },
+        { id: 'Spinach', name: 'Spinach', icon: '🌱' },
+        { id: 'Cabbage', name: 'Cabbage', icon: '🥬' },
     ];
 
-    const farmers = [
-        { id: 1, name: 'Dorcas Agwenge', rating: 4.8, products: 12, location: 'Kiambu' },
-        { id: 2, name: 'Viera man', rating: 4.9, products: 8, location: 'Kisumu' },
-        { id: 3, name: 'Harzel Adwet', rating: 4.7, products: 15, location: 'Nakuru' },
-    ];
+    // Debounce search term
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearchTerm(searchTerm);
+        }, 2000); // Wait 500ms after user stops typing
 
-    // Filter products based on search and category
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
+    // Fetch products market_produce from API
+    useEffect(() => {
+        const fetchProducts = async () => {
+            try {
+                setLoading(true);
+                // Build URL with filters
+                let url = 'http://localhost:8000/api/products/';
+                const params = new URLSearchParams();
+
+                if (selectedCategory !== 'all') {
+                    params.append('category', selectedCategory);
+                }
+
+                if (debouncedSearchTerm) {
+                    params.append('search', debouncedSearchTerm);
+                }
+
+                if (selectedLocation !== 'all') {
+                    params.append('location', selectedLocation);
+                }
+
+                const queryString = params.toString();
+                if (queryString) {
+                    url += `?${queryString}`;
+                }
+
+                const response = await axios.get(url);
+                console.log(response.data);
+
+                setProducts(response.data.results || []);
+
+                // Extract unique farmers from products
+                const productsList = response.data.results || [];
+                const uniqueFarmers = [...new Map(
+                    productsList.map(product => [product.farmer?.id, {
+                        id: product.farmer?.id,
+                        name: product.farmer?.name || 'Unknown Farmer',
+                        location: product.location,
+                        productCount: productsList.filter(p => p.farmer?.id === product.farmer?.id).length,
+                        rating: product.farmer?.rating || 4.5
+                    }])
+                ).values()];
+
+                setFarmers(uniqueFarmers);
+                setError(null);
+            } catch (err) {
+                setError('Failed to load products. Please try again.');
+                console.error('Error fetching products:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProducts();
+    }, [selectedCategory, debouncedSearchTerm, selectedLocation]);
+
+    // Get unique locations from products
+    const locations = ['all', ...new Set(products.map(p => p.location).filter(Boolean))];
+
+    // Filter products based on search and category (client-side filtering as backup)
     const filteredProducts = products.filter(product => {
-        const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            product.farmer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            product.location.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = debouncedSearchTerm === '' ||
+            (product.name && product.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase())) ||
+            (product.farmer && product.farmer.name && product.farmer.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase())) ||
+            (product.location && product.location.toLowerCase().includes(debouncedSearchTerm.toLowerCase()));
+
         const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
-        return matchesSearch && matchesCategory;
+        const matchesLocation = selectedLocation === 'all' || product.location === selectedLocation;
+
+        return matchesSearch && matchesCategory && matchesLocation;
     });
 
     // Cart functions
@@ -170,7 +116,11 @@ function FindVegetables( { onBack}) {
                         : item
                 );
             }
-            return [...prevCart, { ...product, quantity: 1 }];
+            return [...prevCart, {
+                ...product,
+                quantity: 1,
+                image: product.image
+            }];
         });
 
         // Show mini notification
@@ -196,7 +146,7 @@ function FindVegetables( { onBack}) {
     };
 
     const getCartTotal = () => {
-        return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+        return cart.reduce((total, item) => total + (parseFloat(item.price) * item.quantity), 0);
     };
 
     const handleCheckout = () => {
@@ -204,10 +154,46 @@ function FindVegetables( { onBack}) {
             alert('Your cart is empty!');
             return;
         }
-        // Navigate to checkout page or show checkout modal
         alert('Proceeding to checkout...');
-        // navigate('/checkout');
     };
+
+    const handleSearchChange = (e) => {
+        setSearchTerm(e.target.value);
+    };
+
+    const clearFilters = () => {
+        setSearchTerm('');
+        setDebouncedSearchTerm('');
+        setSelectedCategory('all');
+        setSelectedLocation('all');
+    };
+
+    if (loading && products.length === 0) {
+        return (
+            <main className="marketplace">
+                <div className="loading-container">
+                    <div className="spinner"></div>
+                    <p>Loading fresh vegetables...</p>
+                </div>
+            </main>
+        );
+    }
+
+    if (error) {
+        return (
+            <main className="marketplace">
+                <div className="error-container">
+                    <p className="error-message">{error}</p>
+                    <button
+                        className="retry-button"
+                        onClick={() => window.location.reload()}
+                    >
+                        Retry
+                    </button>
+                </div>
+            </main>
+        );
+    }
 
     return (
         <main className="marketplace">
@@ -226,12 +212,16 @@ function FindVegetables( { onBack}) {
                     <div className="header-right">
                         <div className="location-selector">
                             <span className="location-icon">📍</span>
-                            <select className="location-dropdown">
-                                <option>Kesses</option>
-                                <option>Mabs</option>
-                                <option>Eldoret</option>
-                                <option>chebarus</option>
-                                <option>stage</option>
+                            <select
+                                className="location-dropdown"
+                                value={selectedLocation}
+                                onChange={(e) => setSelectedLocation(e.target.value)}
+                            >
+                                {locations.map(location => (
+                                    <option key={location} value={location}>
+                                        {location === 'all' ? 'All Locations' : location}
+                                    </option>
+                                ))}
                             </select>
                         </div>
                         <button
@@ -264,9 +254,12 @@ function FindVegetables( { onBack}) {
                             cart.map(item => (
                                 <div key={item.id} className="cart-item">
                                     <img
-                                        src={item.image}
+                                        src={item.image || '/default-product-image.png'}
                                         alt={item.name}
                                         className="cart-item-image"
+                                        onError={(e) => {
+                                            e.target.src = '/default-product-image.png';
+                                        }}
                                     />
                                     <div className="cart-item-details">
                                         <h4>{item.name}</h4>
@@ -295,7 +288,7 @@ function FindVegetables( { onBack}) {
                         <div className="cart-footer">
                             <div className="cart-total">
                                 <span>Total:</span>
-                                <span>KES {getCartTotal()}</span>
+                                <span>KES {getCartTotal().toFixed(2)}</span>
                             </div>
                             <button
                                 className="checkout-button"
@@ -316,11 +309,19 @@ function FindVegetables( { onBack}) {
                             type="text"
                             placeholder="Search vegetables, farmers, or locations..."
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={handleSearchChange}
                             className="search-input"
+                            autoFocus={false}
                         />
                         <button className="search-button">🔍</button>
                     </div>
+
+                    {/* Search indicator - shows when search is active */}
+                    {debouncedSearchTerm && (
+                        <div className="search-indicator">
+                            Searching for: "{debouncedSearchTerm}"
+                        </div>
+                    )}
 
                     <div className="category-filters">
                         {categories.map(category => (
@@ -353,14 +354,19 @@ function FindVegetables( { onBack}) {
                     <div className="marketplace-grid">
                         {filteredProducts.map((product) => (
                             <div key={product.id} className="product-card-large">
-                                <div className="product-badge">
-                                    {product.rating >= 4.8 && '⭐ Top Rated'}
-                                </div>
+                                {product.farmer?.rating >= 4.8 && (
+                                    <div className="product-badge">
+                                        ⭐ Top Rated
+                                    </div>
+                                )}
                                 <div className="product-image-container">
                                     <img
-                                        src={product.image}
+                                        src={product.image || '/default-product-image.png'}
                                         alt={product.name}
                                         className="product-image"
+                                        onError={(e) => {
+                                            e.target.src = '/default-product-image.png';
+                                        }}
                                     />
                                     {!product.available && (
                                         <div className="sold-out">Sold Out</div>
@@ -370,24 +376,18 @@ function FindVegetables( { onBack}) {
                                 <div className="product-details">
                                     <div className="product-header">
                                         <h3 className="product-title">{product.name}</h3>
-                                        <span className="product-unit">per {product.unit}</span>
+                                        <span className="product-unit">per {product.unit || 'kg'}</span>
                                     </div>
 
-                                    <p className="product-description">{product.description}</p>
-
                                     <div className="product-farmer-info">
-                                        <span className="farmer-name">👨‍🌾 {product.farmer}</span>
+                                        <span className="farmer-name">👨‍🌾 {product.farmer?.name || 'Unknown Farmer'}</span>
                                         <span className="farmer-location">📍 {product.location}</span>
                                     </div>
 
                                     <div className="product-meta">
                                         <div className="product-rating">
-                                            <span className="stars">{'⭐'.repeat(Math.floor(product.rating))}</span>
-                                            <span className="rating-value">{product.rating}</span>
-                                            <span className="orders">({product.orders} orders)</span>
-                                        </div>
-                                        <div className="product-min-order">
-                                            Min: {product.minOrder} {product.unit}s
+                                            <span className="stars">{'⭐'.repeat(Math.floor(product.farmer?.rating || 4))}</span>
+                                            <span className="rating-value">{product.farmer?.rating || 4.0}</span>
                                         </div>
                                     </div>
 
@@ -403,12 +403,14 @@ function FindVegetables( { onBack}) {
                                                 onClick={() => {
                                                     addToCart(product);
                                                 }}
+                                                disabled={!product.available}
                                             >
                                                 Buy Now
                                             </button>
                                             <button
                                                 className="add-to-cart-button"
                                                 onClick={() => addToCart(product)}
+                                                disabled={!product.available}
                                             >
                                                 Add to Cart
                                             </button>
@@ -424,10 +426,7 @@ function FindVegetables( { onBack}) {
                             <p>No vegetables found matching your criteria</p>
                             <button
                                 className="clear-filters"
-                                onClick={() => {
-                                    setSearchTerm('');
-                                    setSelectedCategory('all');
-                                }}
+                                onClick={clearFilters}
                             >
                                 Clear Filters
                             </button>
@@ -437,38 +436,40 @@ function FindVegetables( { onBack}) {
             </section>
 
             {/* Farmers Nearby Section */}
-            <section className="farmers-section">
-                <div className="container">
-                    <h2 className="section-title">Top Farmers Near You</h2>
-                    <div className="farmers-grid">
-                        {farmers.map(farmer => (
-                            <div key={farmer.id} className="farmer-card">
-                                <div className="farmer-avatar">
-                                    <span className="farmer-avatar-icon">👨‍🌾</span>
-                                </div>
-                                <div className="farmer-info">
-                                    <h3>{farmer.name}</h3>
-                                    <div className="farmer-rating">
-                                        <span className="stars">{'⭐'.repeat(Math.floor(farmer.rating))}</span>
-                                        <span>{farmer.rating}</span>
+            {farmers.length > 0 && (
+                <section className="farmers-section">
+                    <div className="container">
+                        <h2 className="section-title">Top Farmers Near You</h2>
+                        <div className="farmers-grid">
+                            {farmers.slice(0, 3).map(farmer => (
+                                <div key={farmer.id} className="farmer-card">
+                                    <div className="farmer-avatar">
+                                        <span className="farmer-avatar-icon">👨‍🌾</span>
                                     </div>
-                                    <p className="farmer-location">{farmer.location}</p>
-                                    <p className="farmer-products">{farmer.products} products available</p>
-                                    <button className="view-farmer-btn">View Farm</button>
+                                    <div className="farmer-info">
+                                        <h3>{farmer.name}</h3>
+                                        <div className="farmer-rating">
+                                            <span className="stars">{'⭐'.repeat(Math.floor(farmer.rating))}</span>
+                                            <span>{farmer.rating}</span>
+                                        </div>
+                                        <p className="farmer-location">{farmer.location}</p>
+                                        <p className="farmer-products">{farmer.productCount} products available</p>
+                                        <button className="view-farmer-btn">View Farm</button>
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
-                </div>
-            </section>
+                </section>
+            )}
 
             {/* Quick Order Section */}
             <section className="quick-order-section">
                 <div className="container">
                     <div className="quick-order-banner">
                         <div className="quick-order-content">
-                            <h2>Need Sukuma in a Hurry?</h2>
-                            <p>Get express delivery within 2 hours in Moi university</p>
+                            <h2>Need Vegetables in a Hurry?</h2>
+                            <p>Get express delivery within 2 hours in your area</p>
                             <button className="quick-order-button">Express Order →</button>
                         </div>
                     </div>
