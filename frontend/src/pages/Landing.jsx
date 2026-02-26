@@ -1,21 +1,69 @@
 // Landing.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import './landing.css';
 import skuma from '../assets/fresh-sukuma.png';
 import { useNavigate } from 'react-router-dom';
+import Navbar from './Navbar';
 
 function Landing() {
     const navigate = useNavigate();
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    const products = [
-        { id: 1, name: 'Fresh Sukuma', price: '50 KES', farmer: 'Joseph Mwangi', location: 'Kiambu' },
-        { id: 2, name: 'Organic Sukuma', price: '60 KES', farmer: 'Grace Akinyi', location: 'Kisumu' },
-        { id: 3, name: 'Premium Sukuma', price: '45 KES', farmer: 'Peter Omondi', location: 'Nakuru' },
-        { id: 4, name: 'Giant Sukuma', price: '70 KES', farmer: 'Mary Wanjiku', location: 'Nyeri' },
-    ];
+    useEffect(() => {
+        const fetchProducts = async () => {
+            try {
+                setLoading(true);
+                const response = await fetch('http://localhost:8000/api/products/');
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch products');
+                }
+
+                const data = await response.json();
+                setProducts(data.results);
+                console.log(data.results);
+
+                setError(null);
+            } catch (err) {
+                setError(err.message);
+                console.error('Error fetching products:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProducts();
+    }, []);
+
+    // Helper function to format price
+    const formatPrice = (price) => {
+        return `${price} KES`;
+    };
+
+    // Fixed: Get farmer name from the farmer object
+    const getFarmerName = (product) => {
+        // Check if farmer exists and has a name property
+        if (product.farmer && product.farmer.name) {
+            return product.farmer.name;
+        }
+        return 'Unknown Farmer';
+    };
+
+    // Fixed: Get location - check multiple possible locations
+    const getLocation = (product) => {
+        // Check if farmer exists and has location
+        if (product.farmer && product.farmer.location) {
+            return product.farmer.location;
+        }
+        // Fallback to product location if available
+        return product.location || 'Unknown';
+    };
 
     return (
         <main className="landing">
+            <Navbar />
             {/* Hero Section */}
             <section className="hero-section">
                 <div className="container hero-container">
@@ -28,13 +76,13 @@ function Landing() {
                         </p>
                         <div className="hero-buttons">
                             <button
-                                onClick={() => navigate('/market')}  // FIXED: Arrow function
+                                onClick={() => navigate('/market')}
                                 className="button button-primary"
                             >
                                 Find Vegetables
                             </button>
                             <button
-                                onClick={() => navigate('/sell')}  // FIXED: Added navigation
+                                onClick={() => navigate('/sell')}
                                 className="button button-secondary"
                             >
                                 Sell Your Produce
@@ -100,27 +148,52 @@ function Landing() {
             <section className="featured-section">
                 <div className="container">
                     <h2 className="section-title">Featured Sukuma</h2>
-                    <div className="products-grid">
-                        {products.map((product) => (
-                            <div key={product.id} className="product-card">
-                                <div className="product-image-placeholder">
-                                    <span>Sukuma Image</span>
+
+                    {loading && (
+                        <div className="loading-state">
+                            <p>Loading products...</p>
+                        </div>
+                    )}
+
+                    {error && (
+                        <div className="error-state">
+                            <p>Error loading products: {error}</p>
+                        </div>
+                    )}
+
+                    {!loading && !error && products.length === 0 && (
+                        <div className="empty-state">
+                            <p>No products available at the moment.</p>
+                        </div>
+                    )}
+
+                    {!loading && !error && products.length > 0 && (
+                        <div className="products-grid">
+                            {products.slice(0, 4).map((product) => (
+                                <div key={product.id} className="product-card">
+                                    <div className="product-image-placeholder">
+                                        {product.image ? (
+                                            <img src={product.image} alt={product.name} />
+                                        ) : (
+                                            <span>Sukuma Image</span>
+                                        )}
+                                    </div>
+                                    <div className="product-info">
+                                        <h3 className="product-name">{product.name}</h3>
+                                        <p className="product-price">{formatPrice(product.price)} per {product.unit}</p>
+                                        <p className="product-farmer">Farmer: {getFarmerName(product)}</p>
+                                        <p className="product-location">📍 {getLocation(product)}</p>
+                                        <button
+                                            onClick={() => navigate(`/product/${product.id}`)}
+                                            className="button button-primary order-button"
+                                        >
+                                            Order Now
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="product-info">
-                                    <h3 className="product-name">{product.name}</h3>
-                                    <p className="product-price">{product.price} per bundle</p>
-                                    <p className="product-farmer">Farmer: {product.farmer}</p>
-                                    <p className="product-location">📍 {product.location}</p>
-                                    <button
-                                        onClick={() => navigate(`/product/${product.id}`)}  // FIXED: Added navigation
-                                        className="button button-primary order-button"
-                                    >
-                                        Order Now
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </section>
 
@@ -156,13 +229,13 @@ function Landing() {
                         <h2 className="cta-title">Start Buying Fresh Sukuma Today</h2>
                         <div className="cta-buttons">
                             <button
-                                onClick={() => navigate('/join/mamamboga')}  // FIXED: Added navigation
+                                onClick={() => navigate('/join/mamamboga')}
                                 className="button button-light"
                             >
                                 Join as Mama Mboga
                             </button>
                             <button
-                                onClick={() => navigate('/join/farmer')}  // FIXED: Added navigation
+                                onClick={() => navigate('/join/farmer')}
                                 className="button button-light"
                             >
                                 Join as Farmer

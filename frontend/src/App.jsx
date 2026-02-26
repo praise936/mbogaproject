@@ -2,7 +2,7 @@ import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
-import Landing from './pages/Landing'
+import Landing from './pages/landing'
 import Navbar from './pages/Navbar'
  
 import Profile from './pages/FarmerProfile'
@@ -14,6 +14,7 @@ import Register from './pages/Register';
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import FarmerOrders from './pages/FarmerOrders'
 
 // You'll need to create this
 
@@ -36,8 +37,9 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/orders" element={<FarmerOrders />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/landing" element={<Landing />} />
+      <Route path="/" element={<Landing />} />
       <Route path="/sell" element={<ManageVegetables />} />
       <Route path="/market" element={<FindVegetables />} />
       <Route
@@ -48,7 +50,7 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route path="/" element={<Navigate to="/login" />} />
+     
     </Routes>
   );
 }

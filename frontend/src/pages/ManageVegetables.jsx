@@ -2,7 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import './manageVegetables.css';
 import axios from 'axios';
+// Total Vaue
 import { useNavigate } from 'react-router-dom';
+import Navbar from './Navbar';
 
 function ManageVegetables({ onBack }) {
     const navigate = useNavigate();
@@ -283,16 +285,18 @@ function ManageVegetables({ onBack }) {
     return (
         <main className="seller-dashboard">
             {/* Header */}
+            
             <header className="dashboard-header">
                 <div className="container header-container">
                     <div className="header-left">
-                        <button
-                            className="back-button"
-                            onClick={onBack}
-                        >
-                            ← Back to Home
-                        </button>
+                        
                         <h1 className="dashboard-title">Farmer Dashboard</h1>
+                    </div>
+                    <div className="header-right">
+                        <div className="farmer-badge">
+                            
+                            <a href="/">home</a>
+                        </div>
                     </div>
                     <div className="header-right">
                         <div className="farmer-badge">
@@ -314,13 +318,7 @@ function ManageVegetables({ onBack }) {
                                 <p className="stat-value">{stats.totalProducts}</p>
                             </div>
                         </div>
-                        <div className="stat-card">
-                            <div className="stat-icon">💰</div>
-                            <div className="stat-content">
-                                <h3>Total Value</h3>
-                                <p className="stat-value">KES {stats.totalRevenue.toFixed(2)}</p>
-                            </div>
-                        </div>
+                        
                         <div className="stat-card">
                             <div className="stat-icon">✅</div>
                             <div className="stat-content">
@@ -360,6 +358,12 @@ function ManageVegetables({ onBack }) {
                         }}
                     >
                         {showAddForm ? '− Cancel' : '+ Add New Product'}
+                    </button>
+                    <button
+                        className="add-product-button"
+                        onClick={()=>navigate('/orders')}
+                    >
+                        see orders
                     </button>
                 </div>
             </section>

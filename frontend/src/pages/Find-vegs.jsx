@@ -2,7 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import './findVegetables.css';
 import axios from 'axios';
+import publicApi from '../services/publicApi';
+
 import { useNavigate } from 'react-router-dom';
+import { HardDrive } from 'lucide-react';
 
 function FindVegetables({ onBack }) {
     const navigate = useNavigate();
@@ -16,6 +19,7 @@ function FindVegetables({ onBack }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [selectedLocation, setSelectedLocation] = useState('all');
+    const [submittingOrder, setSubmittingOrder] = useState(false);
 
     const categories = [
         { id: 'all', name: 'All Vegetables', icon: '🌿' },
@@ -28,12 +32,12 @@ function FindVegetables({ onBack }) {
     useEffect(() => {
         const timer = setTimeout(() => {
             setDebouncedSearchTerm(searchTerm);
-        }, 2000); // Wait 500ms after user stops typing
+        }, 2000); // Wait 2 seconds after user stops typing
 
         return () => clearTimeout(timer);
     }, [searchTerm]);
 
-    // Fetch products market_produce from API
+    // Fetch products market_produce from publicApi
     useEffect(() => {
         const fetchProducts = async () => {
             try {
@@ -149,12 +153,72 @@ function FindVegetables({ onBack }) {
         return cart.reduce((total, item) => total + (parseFloat(item.price) * item.quantity), 0);
     };
 
-    const handleCheckout = () => {
+    const handleCheckout = async () => {
         if (cart.length === 0) {
             alert('Your cart is empty!');
             return;
         }
-        alert('Proceeding to checkout...');
+
+        try {
+            setSubmittingOrder(true);
+
+            // Prepare order data
+            const orderData = {
+                items: cart.map(item => ({
+                    product_id: item.id,
+                    product_name: item.name,
+                    quantity: item.quantity,
+                    price: parseFloat(item.price),
+                    subtotal: parseFloat(item.price) * item.quantity,
+                    farmer: {
+                        id: item.farmer?.id,
+                        name: item.farmer?.name || 'Unknown Farmer',
+                        rating: item.farmer?.rating || 4.0
+                    },
+                    image: item.image || '/default-product-image.png',
+                    category: item.category,
+                    unit: item.unit || 'kg',
+                    location: item.location
+                })),
+                total_amount: getCartTotal(),
+                order_date: new Date().toISOString(),
+                status: 'pending',
+                delivery_location: selectedLocation !== 'all' ? selectedLocation : 'To be specified',
+                customer_notes: ''
+            };
+
+            // Send order to backend
+            const response = await publicApi.post('/orders/', orderData);
+
+            if (response.status === 200 || response.status === 201) {
+                // Clear cart after successful order
+                setCart([]);
+                setShowCart(false);
+
+                // Show success message
+                alert('Order placed successfully! You will receive a confirmation shortly.');
+
+                // Optional: Navigate to order confirmation page
+                // navigate('/order-confirmation', { state: { orderId: response.data.id } });
+            }
+        } catch (error) {
+            console.error('Error placing order:', error);
+
+            // Handle specific error cases
+            if (error.response) {
+                // The request was made and the server responded with a status code
+                // that falls out of the range of 2xx
+                alert(`Failed to place order: ${error.response.data.message || 'Server error'}`);
+            } else if (error.request) {
+                // The request was made but no response was received
+                alert('Failed to place order: No response from server. Please check your internet connection.');
+            } else {
+                // Something happened in setting up the request that triggered an Error
+                alert('Failed to place order: ' + error.message);
+            }
+        } finally {
+            setSubmittingOrder(false);
+        }
     };
 
     const handleSearchChange = (e) => {
@@ -264,6 +328,8 @@ function FindVegetables({ onBack }) {
                                     <div className="cart-item-details">
                                         <h4>{item.name}</h4>
                                         <p className="cart-item-price">KES {item.price} × {item.quantity}</p>
+                                        <p className="cart-item-farmer">Farmer: {item.farmer?.name || 'Unknown'}</p>
+                                        <p className="cart-item-location">Location: {item.location}</p>
                                         <div className="cart-item-controls">
                                             <button
                                                 onClick={() => updateQuantity(item.id, item.quantity - 1)}
@@ -293,8 +359,9 @@ function FindVegetables({ onBack }) {
                             <button
                                 className="checkout-button"
                                 onClick={handleCheckout}
+                                disabled={submittingOrder}
                             >
-                                Proceed to Checkout
+                                {submittingOrder ? 'Placing Order...' : 'Make Order'}
                             </button>
                         </div>
                     )}

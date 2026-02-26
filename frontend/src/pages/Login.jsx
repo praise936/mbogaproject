@@ -37,7 +37,7 @@ const Login = () => {
         const result = await login(formData);
 
         if (result.success) {
-            navigate('/landing'); // or dashboard
+            navigate('/'); // or dashboard
         } else {
             setLocalError(result.error);
         }

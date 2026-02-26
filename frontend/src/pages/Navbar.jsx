@@ -24,12 +24,12 @@ function Navbar() {
                 </button>
 
                 <div className={`navbar-links ${isMobileMenuOpen ? 'active' : ''}`}>
-                    <a href="#home" className="nav-link">Home</a>
-                    <a href="#how-it-works" className="nav-link">How It Works</a>
-                    <a href="#for-farmers" className="nav-link">For Farmers</a>
-                    <a href="#for-vendors" className="nav-link">For mama mboga</a>
-                    <a href="#login" className="nav-link login-link">Login</a>
-                    <a href="#signup" className="nav-link signup-button">Sign Up</a>
+                    <a href="/" className="nav-link">Home</a>
+                    {/* <a href="#how-it-works" className="nav-link">How It Works</a> */}
+                    <a href="/sell" className="nav-link">For Farmers</a>
+                    <a href="/market" className="nav-link">For mama mboga</a>
+                    <a href="/login" className="nav-link login-link">Login</a>
+                    <a href="/register" className="nav-link signup-button">Sign Up</a>
                 </div>
             </div>
         </nav>
