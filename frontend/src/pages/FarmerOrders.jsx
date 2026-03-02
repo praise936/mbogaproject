@@ -1,643 +1,578 @@
-// FarmerOrders.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import publicApi from '../services/publicApi';
 import './farmerOrders.css';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
 
-function FarmerOrders({ onBack }) {
-    const navigate = useNavigate();
+// Constants
+const ORDER_STATUSES = {
+    ALL: 'all',
+    PENDING: 'pending',
+    CONFIRMED: 'confirmed',
+    PROCESSING: 'processing',
+    OUT_FOR_DELIVERY: 'out_for_delivery',
+    DELIVERED: 'delivered',
+    CANCELLED: 'cancelled'
+};
+
+const STATUS_CONFIG = [
+    { id: ORDER_STATUSES.ALL, label: 'All Orders', icon: '📋', color: '#64748b' },
+    { id: ORDER_STATUSES.PENDING, label: 'Pending', icon: '⏳', color: '#f59e0b' },
+    { id: ORDER_STATUSES.CONFIRMED, label: 'Confirmed', icon: '✅', color: '#3b82f6' },
+    { id: ORDER_STATUSES.PROCESSING, label: 'Processing', icon: '⚙️', color: '#8b5cf6' },
+    { id: ORDER_STATUSES.OUT_FOR_DELIVERY, label: 'Out for Delivery', icon: '🚚', color: '#f97316' },
+    { id: ORDER_STATUSES.DELIVERED, label: 'Delivered', icon: '🎉', color: '#10b981' },
+    { id: ORDER_STATUSES.CANCELLED, label: 'Cancelled', icon: '❌', color: '#ef4444' }
+];
+
+// Utility Functions
+const formatCurrency = (amount) => {
+    if (amount === null || amount === undefined) return '0.00';
+    const num = typeof amount === 'number' ? amount : Number(amount);
+    return isNaN(num) ? '0.00' : num.toFixed(2);
+};
+
+const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+};
+
+const formatDateShort = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+};
+
+// Stats Card Component
+const StatsCard = ({ title, value, icon, trend, color }) => (
+    <div className="stats-card">
+        <div className="stats-card-content">
+            <div className="stats-card-left">
+                <span className="stats-card-title">{title}</span>
+                <span className="stats-card-value">{value}</span>
+                {trend && <span className="stats-card-trend">{trend}</span>}
+            </div>
+            <div className="stats-card-icon" style={{ backgroundColor: `${color}15`, color }}>
+                {icon}
+            </div>
+        </div>
+    </div>
+);
+
+// Status Badge Component
+const StatusBadge = ({ status }) => {
+    const config = STATUS_CONFIG.find(s => s.id === status) || STATUS_CONFIG[0];
+    return (
+        <span className="status-badge" style={{ backgroundColor: `${config.color}15`, color: config.color }}>
+            <span className="status-badge-icon">{config.icon}</span>
+            <span>{config.label}</span>
+        </span>
+    );
+};
+
+// Order Card Component
+const OrderCard = ({ order, onViewDetails, onStatusUpdate }) => {
+    const canUpdate = !['delivered', 'cancelled'].includes(order.status);
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    return (
+        <div className="order-card">
+            {/* Card Header */}
+            <div className="order-card-header">
+                <div className="order-header-left">
+                    <h3 className="order-number">#{order.order_number}</h3>
+                    <StatusBadge status={order.status} />
+                </div>
+                <span className="order-date">{formatDateShort(order.created_at)}</span>
+            </div>
+
+            {/* Customer Info Row */}
+            <div className="customer-info-row">
+                <div className="customer-info-item">
+                    <span className="info-icon">👤</span>
+                    <span>{order.customer_name}</span>
+                </div>
+                <div className="customer-info-item">
+                    <span className="info-icon">📞</span>
+                    <span>{order.customer_phone}</span>
+                </div>
+                <div className="customer-info-item address">
+                    <span className="info-icon">📍</span>
+                    <span className="address-text">{order.delivery_address}</span>
+                </div>
+            </div>
+
+            {/* Products Preview */}
+            <div className="products-preview">
+                {order.items?.slice(0, 3).map((item, idx) => (
+                    <div key={idx} className="preview-product">
+                        <div className="preview-product-image">
+                            {item.product_image ? (
+                                <img
+                                    src={item.product_image}
+                                    alt={item.product_name}
+                                    onError={(e) => e.target.style.display = 'none'}
+                                />
+                            ) : (
+                                <div className="preview-image-placeholder">📦</div>
+                            )}
+                        </div>
+                        <div className="preview-product-details">
+                            <span className="preview-product-name">{item.product_name}</span>
+                            <span className="preview-product-meta">
+                                {item.quantity} {item.unit} × KES {formatCurrency(item.price_per_unit)}
+                            </span>
+                        </div>
+                    </div>
+                ))}
+                {(order.items?.length || 0) > 3 && (
+                    <div className="more-products">+{order.items.length - 3} more items</div>
+                )}
+            </div>
+
+            {/* Card Footer */}
+            <div className="order-card-footer">
+                <div className="order-total">
+                    <span>Total Amount</span>
+                    <strong>KES {formatCurrency(order.total_amount)}</strong>
+                </div>
+
+                <div className="order-actions">
+                    <button
+                        className="btn-view"
+                        onClick={() => onViewDetails(order)}
+                    >
+                        View Details
+                    </button>
+
+                    {canUpdate && (
+                        <select
+                            className="status-select"
+                            value={order.status}
+                            onChange={(e) => onStatusUpdate(order.id, e.target.value)}
+                        >
+                            <option value="confirmed">✓ Confirm</option>
+                            <option value="processing">⚙️ Process</option>
+                            <option value="out_for_delivery">🚚 Out for Delivery</option>
+                            <option value="delivered">🎉 Delivered</option>
+                            <option value="cancelled">❌ Cancel</option>
+                        </select>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// Order Details Modal Component
+const OrderDetailsModal = ({ order, onClose, onStatusUpdate }) => {
+    if (!order) return null;
+
+    return (
+        <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-content" onClick={e => e.stopPropagation()}>
+                {/* Modal Header */}
+                <div className="modal-header">
+                    <div>
+                        <h2>Order #{order.order_number}</h2>
+                        <div className="modal-header-status">
+                            <StatusBadge status={order.status} />
+                            <span className="modal-date">Placed on {formatDate(order.created_at)}</span>
+                        </div>
+                    </div>
+                    <button className="modal-close" onClick={onClose}>×</button>
+                </div>
+
+                {/* Modal Body */}
+                <div className="modal-body">
+                    {/* Customer Info Section */}
+                    <div className="customer-info-section">
+                        <div className="info-grid">
+                            <div className="info-item">
+                                <span className="info-label">Customer</span>
+                                <span className="info-value">{order.customer_name}</span>
+                            </div>
+                            <div className="info-item">
+                                <span className="info-label">Phone</span>
+                                <span className="info-value">{order.customer_phone}</span>
+                            </div>
+                            <div className="info-item full-width">
+                                <span className="info-label">Delivery Address</span>
+                                <span className="info-value">{order.delivery_address}</span>
+                            </div>
+                            {order.delivery_instructions && (
+                                <div className="info-item full-width">
+                                    <span className="info-label">Instructions</span>
+                                    <span className="info-value">{order.delivery_instructions}</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Products Grid */}
+                    <div className="products-section">
+                        <h3>Order Items</h3>
+                        <div className="products-grid">
+                            {order.items?.map(item => (
+                                <div key={item.id} className="product-item">
+                                    <div className="product-image-wrapper">
+                                        {item.product_image ? (
+                                            <img
+                                                src={item.product_image}
+                                                alt={item.product_name}
+                                                className="product-image"
+                                            />
+                                        ) : (
+                                            <div className="product-image-placeholder">
+                                                <span>📦</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="product-details">
+                                        <h4 className="product-name">{item.product_name}</h4>
+                                        <div className="product-price-info">
+                                            <span className="product-quantity">
+                                                {item.quantity} {item.unit}
+                                            </span>
+                                            <span className="product-price">
+                                                KES {formatCurrency(item.price_per_unit)}/{item.unit}
+                                            </span>
+                                        </div>
+                                        <div className="product-subtotal">
+                                            <span>Subtotal:</span>
+                                            <strong>KES {formatCurrency(item.subtotal)}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Order Summary */}
+                    <div className="order-summary-section">
+                        <div className="summary-row">
+                            <span>Subtotal</span>
+                            <span>KES {formatCurrency(order.subtotal)}</span>
+                        </div>
+                        <div className="summary-row">
+                            <span>Delivery Fee</span>
+                            <span>KES {formatCurrency(order.delivery_fee)}</span>
+                        </div>
+                        <div className="summary-row total">
+                            <span>Total Amount</span>
+                            <span className="total-amount">KES {formatCurrency(order.total_amount)}</span>
+                        </div>
+                    </div>
+
+                    {/* Timeline */}
+                    {order.timeline && (
+                        <div className="timeline-section">
+                            <h3>Order Timeline</h3>
+                            <div className="timeline">
+                                {Object.entries(order.timeline).map(([key, value]) => {
+                                    if (!value) return null;
+                                    const status = STATUS_CONFIG.find(s => s.id === key);
+                                    return (
+                                        <div key={key} className="timeline-item">
+                                            <div className="timeline-icon" style={{ color: status?.color }}>
+                                                {status?.icon}
+                                            </div>
+                                            <div className="timeline-content">
+                                                <span className="timeline-label">{status?.label || key}</span>
+                                                <span className="timeline-date">{formatDateShort(value)}</span>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Modal Footer */}
+                <div className="modal-footer">
+                    <button className="btn-outline" onClick={onClose}>
+                        Close
+                    </button>
+
+                    {!['delivered', 'cancelled'].includes(order.status) && (
+                        <button
+                            className="btn-primary"
+                            onClick={() => {
+                                onStatusUpdate(order.id, ORDER_STATUSES.DELIVERED);
+                                onClose();
+                            }}
+                        >
+                            Mark as Delivered
+                        </button>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// Main Component
+const FarmerOrders = ({ onBack }) => {
     const [orders, setOrders] = useState([]);
-    const [filteredOrders, setFilteredOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [selectedStatus, setSelectedStatus] = useState('all');
-    const [searchTerm, setSearchTerm] = useState('');
-    const [stats, setStats] = useState({
-        totalOrders: 0,
-        pendingOrders: 0,
-        deliveredToday: 0,
-        totalRevenue: 0,
-        revenueToday: 0,
-        ordersByStatus: {}
-    });
+    const [stats, setStats] = useState(null);
     const [selectedOrder, setSelectedOrder] = useState(null);
-    const [showOrderDetails, setShowOrderDetails] = useState(false);
-    const [dateRange, setDateRange] = useState({
-        from: '',
-        to: ''
+    const [showModal, setShowModal] = useState(false);
+    const [filters, setFilters] = useState({
+        status: ORDER_STATUSES.ALL,
+        search: '',
+        dateRange: 'today'
     });
 
-    const statuses = [
-        { id: 'all', name: 'All Orders', icon: '📦', color: '#666' },
-        { id: 'pending', name: 'Pending', icon: '⏳', color: '#f39c12' },
-        { id: 'confirmed', name: 'Confirmed', icon: '✅', color: '#3498db' },
-        { id: 'processing', name: 'Processing', icon: '⚙️', color: '#9b59b6' },
-        { id: 'out_for_delivery', name: 'Out for Delivery', icon: '🚚', color: '#e67e22' },
-        { id: 'delivered', name: 'Delivered', icon: '🎉', color: '#27ae60' },
-        { id: 'cancelled', name: 'Cancelled', icon: '❌', color: '#e74c3c' },
-    ];
+    // Create filtered orders based on search and status
+    const filteredOrders = useMemo(() => {
+        let filtered = [...orders];
+
+        // Filter by status (if not ALL)
+        if (filters.status !== ORDER_STATUSES.ALL) {
+            filtered = filtered.filter(order => order.status === filters.status);
+        }
+
+        // Filter by search term
+        if (filters.search) {
+            const searchLower = filters.search.toLowerCase();
+            filtered = filtered.filter(order =>
+                order.order_number?.toLowerCase().includes(searchLower) ||
+                order.customer_name?.toLowerCase().includes(searchLower) ||
+                order.customer_phone?.toLowerCase().includes(searchLower) ||
+                order.delivery_address?.toLowerCase().includes(searchLower)
+            );
+        }
+
+        // Filter by date range (client-side filtering as fallback)
+        if (filters.dateRange !== 'all' && filters.dateRange !== 'today') {
+            // This is just a fallback - ideally the API handles date filtering
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+            filtered = filtered.filter(order => {
+                const orderDate = new Date(order.created_at);
+                if (filters.dateRange === 'today') {
+                    return orderDate >= today;
+                }
+                // Add more date range logic if needed
+                return true;
+            });
+        }
+
+        // Sort by date (newest first)
+        filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+        return filtered;
+    }, [orders, filters.status, filters.search, filters.dateRange]);
 
     // Fetch orders
-    useEffect(() => {
-        fetchOrders();
-    }, [selectedStatus, dateRange]);
-
-    const fetchOrders = async () => {
+    const fetchOrders = useCallback(async () => {
         try {
             setLoading(true);
-            // Updated URL for orders list
-            let url = 'http://localhost:8000/api/orders/';
-            const params = new URLSearchParams();
+            const params = {
+                ...(filters.status !== ORDER_STATUSES.ALL && { status: filters.status }),
+                ...(filters.search && { search: filters.search }),
+                ...(filters.dateRange !== 'all' && { date_range: filters.dateRange })
+            };
 
-            if (selectedStatus !== 'all') {
-                params.append('status', selectedStatus);
-            }
-
-            if (dateRange.from) {
-                params.append('date_from', dateRange.from);
-            }
-
-            if (dateRange.to) {
-                params.append('date_to', dateRange.to);
-            }
-
-            const queryString = params.toString();
-            if (queryString) {
-                url += `?${queryString}`;
-            }
-
-            const response = await axios.get(url, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                }
-            });
-
-            // Check if response.data has a results property (pagination)
-            let ordersData;
-            if (response.data && Array.isArray(response.data)) {
-                ordersData = response.data;
-            } else if (response.data && response.data.results && Array.isArray(response.data.results)) {
-                ordersData = response.data.results;
-            } else {
-                ordersData = [];
-            }
-
+            const response = await publicApi.get('orders/', { params });
+            const ordersData = response.data.results || response.data || [];
             setOrders(ordersData);
-            console.log(ordersData);
-
-            filterOrders(ordersData, searchTerm);
-
-            // Fetch stats
-            fetchStats();
-
+            setError(null);
         } catch (err) {
             setError('Failed to load orders. Please try again.');
             console.error('Error fetching orders:', err);
         } finally {
             setLoading(false);
         }
-    };
+    }, [filters.status, filters.search, filters.dateRange]);
 
-    const fetchStats = async () => {
+    // Fetch stats
+    const fetchStats = useCallback(async () => {
         try {
-            // Updated URL for order stats
-            const response = await axios.get('http://localhost:8000/api/orders/stats/', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                }
-            });
+            const response = await publicApi.get('orders/stats/');
             setStats(response.data);
-            console.log(response.data);
-
         } catch (err) {
             console.error('Error fetching stats:', err);
         }
-    };
+    }, []);
 
-    const filterOrders = (ordersList, search) => {
-        if (!search.trim()) {
-            setFilteredOrders(ordersList);
-            return;
-        }
+    // Initial fetch
+    useEffect(() => {
+        fetchOrders();
+        fetchStats();
+    }, [fetchOrders, fetchStats]);
 
-        const filtered = ordersList.filter(order =>
-            order.order_id.toLowerCase().includes(search.toLowerCase()) ||
-            order.customer_name.toLowerCase().includes(search.toLowerCase()) ||
-            order.customer_phone.includes(search) ||
-            order.delivery_address.toLowerCase().includes(search.toLowerCase())
-        );
-        setFilteredOrders(filtered);
-    };
-
-    const handleSearch = (e) => {
-        const term = e.target.value;
-        setSearchTerm(term);
-        filterOrders(orders, term);
-    };
-
-    const handleStatusChange = async (orderId, newStatus) => {
+    // Handle status update
+    const handleStatusUpdate = async (orderId, newStatus) => {
         try {
-            // Updated URL for status update
-            await axios.patch(
-                `http://localhost:8000/api/orders/${orderId}/update-status/`,
-                { status: newStatus },
-                {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                    }
-                }
-            );
-
-            // Refresh orders
-            fetchOrders();
-
-            // Show success message
-            alert(`Order status updated to ${newStatus}`);
+            await publicApi.patch(`orders/${orderId}/update-status/`, { status: newStatus });
+            await Promise.all([fetchOrders(), fetchStats()]);
         } catch (err) {
-            alert('Failed to update order status');
-            console.error('Error updating status:', err);
+            alert('Failed to update order status. Please try again.');
         }
     };
 
-    const handleDeleteOrder = async (orderId) => {
-        if (window.confirm('Are you sure you want to delete this order?')) {
-            try {
-                // Updated URL for order deletion
-                await axios.delete(`http://localhost:8000/api/orders/${orderId}/`, {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                    }
-                });
-
-                // Refresh orders
-                fetchOrders();
-                alert('Order deleted successfully');
-            } catch (err) {
-                alert('Failed to delete order');
-                console.error('Error deleting order:', err);
-            }
-        }
-    };
-
-    const handleMarkDelivered = async (orderId) => {
-        try {
-            // Updated URL for status update
-            await axios.patch(
-                `http://localhost:8000/api/orders/${orderId}/update-status/`,
-                { status: 'delivered' },
-                {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                    }
-                }
-            );
-
-            fetchOrders();
-            alert('Order marked as delivered! 🎉');
-        } catch (err) {
-            alert('Failed to mark order as delivered');
-        }
-    };
-
-    const viewOrderDetails = (order) => {
+    // Handle view details
+    const handleViewDetails = (order) => {
         setSelectedOrder(order);
-        setShowOrderDetails(true);
+        setShowModal(true);
     };
 
-    const getStatusColor = (status) => {
-        const statusMap = {
-            'pending': '#f39c12',
-            'confirmed': '#3498db',
-            'processing': '#9b59b6',
-            'out_for_delivery': '#e67e22',
-            'delivered': '#27ae60',
-            'cancelled': '#e74c3c'
-        };
-        return statusMap[status] || '#666';
+    // Handle filter change
+    const handleFilterChange = (key, value) => {
+        setFilters(prev => ({ ...prev, [key]: value }));
     };
 
-    const getStatusIcon = (status) => {
-        const statusMap = {
-            'pending': '⏳',
-            'confirmed': '✅',
-            'processing': '⚙️',
-            'out_for_delivery': '🚚',
-            'delivered': '🎉',
-            'cancelled': '❌'
-        };
-        return statusMap[status] || '📦';
-    };
-
-    const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
+    // Clear filters
+    const clearFilters = () => {
+        setFilters({
+            status: ORDER_STATUSES.ALL,
+            search: '',
+            dateRange: 'today'
         });
     };
 
+    // Stats cards data
+    const statsCards = useMemo(() => {
+        if (!stats) return [];
+        return [
+            { title: 'Total Orders', value: stats.totalOrders || 0, icon: '📊', color: '#64748b' },
+            { title: 'Pending', value: stats.pendingOrders || 0, icon: '⏳', color: '#f59e0b' },
+            { title: 'Processing', value: stats.processingOrders || 0, icon: '⚙️', color: '#8b5cf6' },
+            { title: 'Delivered Today', value: stats.deliveredToday || 0, icon: '🎉', color: '#10b981' },
+            { title: 'Revenue Today', value: `KES ${formatCurrency(stats.revenueToday)}`, icon: '💰', color: '#3b82f6' },
+            { title: 'Total Revenue', value: `KES ${formatCurrency(stats.totalRevenue)}`, icon: '📈', color: '#64748b' }
+        ];
+    }, [stats]);
+
     if (loading && orders.length === 0) {
         return (
-            <main className="farmer-orders">
-                <div className="loading-container">
-                    <div className="spinner"></div>
-                    <p>Loading your orders...</p>
-                </div>
-            </main>
+            <div className="loading-container">
+                <div className="loading-spinner"></div>
+                <p>Loading orders...</p>
+            </div>
         );
     }
 
     return (
-        <main className="farmer-orders">
+        <div className="farmer-orders">
             {/* Header */}
             <header className="orders-header">
-                <div className="container header-container">
-                    <div className="header-left">
-                        <button className="back-button" onClick={onBack}>
-                            ← Back
-                        </button>
-                        <h1 className="page-title">Farmer Orders Dashboard</h1>
-                    </div>
-                    <div className="header-right">
-                        <button
-                            className="refresh-button"
-                            onClick={fetchOrders}
-                        >
-                            🔄 Refresh
-                        </button>
-                    </div>
+                <div className="header-left">
+                    <button className="back-button" onClick={onBack}>
+                        ← Back
+                    </button>
+                    <h1>Orders</h1>
                 </div>
+                <button className="refresh-button" onClick={fetchOrders}>
+                    ↻ Refresh
+                </button>
             </header>
 
-            {/* Stats Cards */}
-            <section className="stats-section">
-                <div className="container">
-                    <div className="stats-grid">
-                        <div className="stat-card">
-                            <div className="stat-icon">📦</div>
-                            <div className="stat-content">
-                                <span className="stat-label">Total Orders</span>
-                                <span className="stat-value">{stats.totalOrders}</span>
-                            </div>
-                        </div>
-                        <div className="stat-card">
-                            <div className="stat-icon">⏳</div>
-                            <div className="stat-content">
-                                <span className="stat-label">Pending</span>
-                                <span className="stat-value">{stats.pendingOrders}</span>
-                            </div>
-                        </div>
-                        <div className="stat-card">
-                            <div className="stat-icon">💰</div>
-                            <div className="stat-content">
-                                <span className="stat-label">Total Revenue</span>
-                                <span className="stat-value">KES {stats.totalRevenue?.toFixed(2)}</span>
-                            </div>
-                        </div>
-                        <div className="stat-card">
-                            <div className="stat-icon">🎉</div>
-                            <div className="stat-content">
-                                <span className="stat-label">Delivered Today</span>
-                                <span className="stat-value">{stats.deliveredToday}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* Filters Section */}
-            <section className="filters-section">
-                <div className="container">
-                    <div className="filters-container">
-                        <div className="search-box">
-                            <input
-                                type="text"
-                                placeholder="Search by order ID, customer, phone..."
-                                value={searchTerm}
-                                onChange={handleSearch}
-                                className="search-input"
-                            />
-                            <span className="search-icon">🔍</span>
-                        </div>
-
-                        <div className="date-filters">
-                            <input
-                                type="date"
-                                value={dateRange.from}
-                                onChange={(e) => setDateRange({ ...dateRange, from: e.target.value })}
-                                className="date-input"
-                                placeholder="From"
-                            />
-                            <span className="date-separator">to</span>
-                            <input
-                                type="date"
-                                value={dateRange.to}
-                                onChange={(e) => setDateRange({ ...dateRange, to: e.target.value })}
-                                className="date-input"
-                                placeholder="To"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Status Tabs */}
-                    <div className="status-tabs">
-                        {statuses.map(status => (
-                            <button
-                                key={status.id}
-                                className={`status-tab ${selectedStatus === status.id ? 'active' : ''}`}
-                                onClick={() => setSelectedStatus(status.id)}
-                                style={{ '--status-color': status.color }}
-                            >
-                                <span className="status-icon">{status.icon}</span>
-                                <span className="status-name">{status.name}</span>
-                                {status.id !== 'all' && (
-                                    <span className="status-count">
-                                        {stats.ordersByStatus?.[status.id] || 0}
-                                    </span>
-                                )}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* Orders List */}
-            <section className="orders-section">
-                <div className="container">
-                    {filteredOrders.length === 0 ? (
-                        <div className="no-orders">
-                            <div className="no-orders-icon">📭</div>
-                            <h3>No orders found</h3>
-                            <p>There are no orders matching your criteria</p>
-                            <button
-                                className="clear-filters-btn"
-                                onClick={() => {
-                                    setSelectedStatus('all');
-                                    setSearchTerm('');
-                                    setDateRange({ from: '', to: '' });
-                                }}
-                            >
-                                Clear Filters
-                            </button>
-                        </div>
-                    ) : (
-                        <div className="orders-list">
-                            {filteredOrders.map(order => (
-                                <div key={order.id} className="order-card">
-                                    <div className="order-header">
-                                        <div className="order-id-section">
-                                            <span className="order-id">{order.order_id}</span>
-                                            <span
-                                                className="order-status-badge"
-                                                style={{
-                                                    backgroundColor: getStatusColor(order.status),
-                                                    color: 'white'
-                                                }}
-                                            >
-                                                {getStatusIcon(order.status)} {order.status.replace('_', ' ')}
-                                            </span>
-                                        </div>
-                                        <div className="order-time">
-                                            {formatDate(order.created_at)}
-                                        </div>
-                                    </div>
-
-                                    <div className="order-body">
-                                        <div className="customer-info">
-                                            <div className="info-row">
-                                                <span className="info-label">👤 Customer:</span>
-                                                <span className="info-value">{order.customer_name}</span>
-                                            </div>
-                                            <div className="info-row">
-                                                <span className="info-label">📞 Phone:</span>
-                                                <span className="info-value">{order.customer_phone}</span>
-                                            </div>
-                                            <div className="info-row">
-                                                <span className="info-label">📍 Address:</span>
-                                                <span className="info-value">{order.delivery_address}</span>
-                                            </div>
-                                        </div>
-
-                                        <div className="order-items-preview">
-                                            <h4>Order Items:</h4>
-                                            <div className="items-list">
-                                                {order.items?.slice(0, 2).map((item, index) => (
-                                                    <div key={index} className="item-preview">
-                                                        <span>{item.quantity} {item.unit} {item.product_name}</span>
-                                                    </div>
-                                                ))}
-                                                {order.items?.length > 2 && (
-                                                    <div className="more-items">
-                                                        +{order.items.length - 2} more items
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        <div className="order-total">
-                                            <span className="total-label">Total Amount:</span>
-                                            <span className="total-value">KES {order.total_amount?.toFixed(2)}</span>
-                                        </div>
-                                    </div>
-
-                                    <div className="order-footer">
-                                        <div className="payment-status">
-                                            <span className="payment-label">Payment:</span>
-                                            <span className={`payment-badge ${order.payment_status}`}>
-                                                {order.payment_status}
-                                            </span>
-                                        </div>
-
-                                        <div className="order-actions">
-                                            <button
-                                                className="action-btn view-btn"
-                                                onClick={() => viewOrderDetails(order)}
-                                            >
-                                                👁️ View
-                                            </button>
-
-                                            {order.status !== 'delivered' && order.status !== 'cancelled' && (
-                                                <>
-                                                    <select
-                                                        className="status-select"
-                                                        value={order.status}
-                                                        onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                                                    >
-                                                        <option value="confirmed">Confirm</option>
-                                                        <option value="processing">Process</option>
-                                                        <option value="out_for_delivery">Out for Delivery</option>
-                                                        <option value="delivered">Delivered</option>
-                                                        <option value="cancelled">Cancel</option>
-                                                    </select>
-
-                                                    {order.status === 'out_for_delivery' && (
-                                                        <button
-                                                            className="action-btn deliver-btn"
-                                                            onClick={() => handleMarkDelivered(order.id)}
-                                                        >
-                                                            ✅ Mark Delivered
-                                                        </button>
-                                                    )}
-                                                </>
-                                            )}
-
-                                            {order.status === 'delivered' && (
-                                                <span className="delivered-badge">
-                                                    ✅ Delivered {order.delivered_at ? formatDate(order.delivered_at) : ''}
-                                                </span>
-                                            )}
-
-                                            <button
-                                                className="action-btn delete-btn"
-                                                onClick={() => handleDeleteOrder(order.id)}
-                                            >
-                                                🗑️ Delete
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            </section>
-
-            {/* Order Details Modal */}
-            {showOrderDetails && selectedOrder && (
-                <div className="modal-overlay" onClick={() => setShowOrderDetails(false)}>
-                    <div className="modal-content" onClick={e => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h2>Order Details - {selectedOrder.order_id}</h2>
-                            <button className="close-modal" onClick={() => setShowOrderDetails(false)}>×</button>
-                        </div>
-
-                        <div className="modal-body">
-                            <div className="detail-section">
-                                <h3>Customer Information</h3>
-                                <div className="detail-grid">
-                                    <div className="detail-item">
-                                        <label>Name:</label>
-                                        <span>{selectedOrder.customer_name}</span>
-                                    </div>
-                                    <div className="detail-item">
-                                        <label>Phone:</label>
-                                        <span>{selectedOrder.customer_phone}</span>
-                                    </div>
-                                    <div className="detail-item">
-                                        <label>Email:</label>
-                                        <span>{selectedOrder.customer_email || 'N/A'}</span>
-                                    </div>
-                                    <div className="detail-item full-width">
-                                        <label>Delivery Address:</label>
-                                        <span>{selectedOrder.delivery_address}</span>
-                                    </div>
-                                    {selectedOrder.delivery_notes && (
-                                        <div className="detail-item full-width">
-                                            <label>Delivery Notes:</label>
-                                            <span>{selectedOrder.delivery_notes}</span>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="detail-section">
-                                <h3>Order Items</h3>
-                                <table className="items-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Product</th>
-                                            <th>Quantity</th>
-                                            <th>Unit</th>
-                                            <th>Price/Unit</th>
-                                            <th>Subtotal</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {selectedOrder.items?.map((item, index) => (
-                                            <tr key={index}>
-                                                <td>{item.product_name}</td>
-                                                <td>{item.quantity}</td>
-                                                <td>{item.unit}</td>
-                                                <td>KES {item.price_per_unit}</td>
-                                                <td>KES {item.subtotal?.toFixed(2)}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                    <tfoot>
-                                        <tr>
-                                            <td colSpan="4" className="total-label">Subtotal:</td>
-                                            <td>KES {selectedOrder.subtotal?.toFixed(2)}</td>
-                                        </tr>
-                                        <tr>
-                                            <td colSpan="4" className="total-label">Delivery Fee:</td>
-                                            <td>KES {selectedOrder.delivery_fee?.toFixed(2)}</td>
-                                        </tr>
-                                        <tr>
-                                            <td colSpan="4" className="total-label grand-total">Total:</td>
-                                            <td className="grand-total">KES {selectedOrder.total_amount?.toFixed(2)}</td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-
-                            <div className="detail-section">
-                                <h3>Order Status</h3>
-                                <div className="status-timeline">
-                                    <div className="timeline-item">
-                                        <span className="timeline-label">Order Placed:</span>
-                                        <span className="timeline-value">{formatDate(selectedOrder.created_at)}</span>
-                                    </div>
-                                    <div className="timeline-item">
-                                        <span className="timeline-label">Current Status:</span>
-                                        <span
-                                            className="status-badge"
-                                            style={{ backgroundColor: getStatusColor(selectedOrder.status) }}
-                                        >
-                                            {selectedOrder.status.replace('_', ' ')}
-                                        </span>
-                                    </div>
-                                    {selectedOrder.delivered_at && (
-                                        <div className="timeline-item">
-                                            <span className="timeline-label">Delivered:</span>
-                                            <span className="timeline-value">{formatDate(selectedOrder.delivered_at)}</span>
-                                        </div>
-                                    )}
-                                    {selectedOrder.estimated_delivery_time && (
-                                        <div className="timeline-item">
-                                            <span className="timeline-label">Estimated Delivery:</span>
-                                            <span className="timeline-value">{formatDate(selectedOrder.estimated_delivery_time)}</span>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="modal-footer">
-                            <button
-                                className="modal-btn close-btn"
-                                onClick={() => setShowOrderDetails(false)}
-                            >
-                                Close
-                            </button>
-                            {selectedOrder.status !== 'delivered' && selectedOrder.status !== 'cancelled' && (
-                                <button
-                                    className="modal-btn update-btn"
-                                    onClick={() => {
-                                        setShowOrderDetails(false);
-                                        handleStatusChange(selectedOrder.id, 'delivered');
-                                    }}
-                                >
-                                    Mark as Delivered
-                                </button>
-                            )}
-                        </div>
-                    </div>
+            {/* Error Banner */}
+            {error && (
+                <div className="error-banner">
+                    <span>⚠️ {error}</span>
+                    <button onClick={fetchOrders}>Retry</button>
                 </div>
             )}
-        </main>
+
+            {/* Stats Grid */}
+            {stats && (
+                <div className="stats-grid">
+                    {statsCards.map((stat, index) => (
+                        <StatsCard key={index} {...stat} />
+                    ))}
+                </div>
+            )}
+
+            {/* Filters Bar */}
+            <div className="filters-bar">
+                <div className="search-wrapper">
+                    <span className="search-icon">🔍</span>
+                    <input
+                        type="text"
+                        placeholder="Search orders, customers..."
+                        value={filters.search}
+                        onChange={(e) => handleFilterChange('search', e.target.value)}
+                        className="search-input"
+                    />
+                </div>
+
+                <select
+                    className="date-filter"
+                    value={filters.dateRange}
+                    onChange={(e) => handleFilterChange('dateRange', e.target.value)}
+                >
+                    <option value="today">Today</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                    <option value="all">All Time</option>
+                </select>
+            </div>
+
+            {/* Status Tabs */}
+            <div className="status-tabs">
+                {STATUS_CONFIG.map(status => (
+                    <button
+                        key={status.id}
+                        className={`status-tab ${filters.status === status.id ? 'active' : ''}`}
+                        onClick={() => handleFilterChange('status', status.id)}
+                    >
+                        <span className="status-tab-icon">{status.icon}</span>
+                        <span className="status-tab-label">{status.label}</span>
+                        {stats?.ordersByStatus?.[status.id] > 0 && (
+                            <span className="status-tab-count">{stats.ordersByStatus[status.id]}</span>
+                        )}
+                    </button>
+                ))}
+            </div>
+
+            {/* Orders Grid */}
+            <div className="orders-grid">
+                {filteredOrders.length === 0 ? (
+                    <div className="empty-state">
+                        <div className="empty-icon">📭</div>
+                        <h3>No orders found</h3>
+                        <p>Try adjusting your filters</p>
+                        <button className="btn-outline" onClick={clearFilters}>
+                            Clear Filters
+                        </button>
+                    </div>
+                ) : (
+                    filteredOrders.map(order => (
+                        <OrderCard
+                            key={order.id}
+                            order={order}
+                            onViewDetails={handleViewDetails}
+                            onStatusUpdate={handleStatusUpdate}
+                        />
+                    ))
+                )}
+            </div>
+
+            {/* Order Details Modal */}
+            {showModal && (
+                <OrderDetailsModal
+                    order={selectedOrder}
+                    onClose={() => setShowModal(false)}
+                    onStatusUpdate={handleStatusUpdate}
+                />
+            )}
+        </div>
     );
-}
+};
 
 export default FarmerOrders;

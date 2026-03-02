@@ -1,4 +1,10 @@
 // Landing.jsx
+import NavigationBar from '../components/NavigationBar';
+import SearchSection from '../components/SearchSection';
+import ProductsGrid from '../components/ProductsGrid';
+import CartSidebar from '../components/CartSidebar';
+import Notification from '../components/Notification';
+import LoadingState from '../components/LoadingState';
 import React, { useState, useEffect } from 'react';
 import './landing.css';
 import skuma from '../assets/fresh-sukuma.png';
@@ -15,7 +21,7 @@ function Landing() {
         const fetchProducts = async () => {
             try {
                 setLoading(true);
-                const response = await fetch('http://localhost:8000/api/products/');
+                const response = await fetch('http://127.0.0.1:8000/api/products/');
 
                 if (!response.ok) {
                     throw new Error('Failed to fetch products');
@@ -184,7 +190,7 @@ function Landing() {
                                         <p className="product-farmer">Farmer: {getFarmerName(product)}</p>
                                         <p className="product-location">📍 {getLocation(product)}</p>
                                         <button
-                                            onClick={() => navigate(`/product/${product.id}`)}
+                                            onClick={() => navigate(`/market`)}
                                             className="button button-primary order-button"
                                         >
                                             Order Now
