@@ -684,9 +684,11 @@
     
 }
 
-.cart-summary,
+.cart-summary {
+    margin-bottom: 44px;
+}
 .checkout-summary {
-    margin-bottom: 54px;
+    margin-bottom: 3354px;
 }
 
 .summary-row {
@@ -709,8 +711,10 @@
 /* Checkout Section */
 .checkout-section {
     background: white;
-    padding-bottom: 20px;
-    marg
+    padding-bottom: 220px;
+    margin-bottom: 100px;
+    
+    
 }
 
 .checkout-section h3 {
@@ -723,8 +727,9 @@
 .checkout-form {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 5px;
     margin-bottom: 24px;
+    
 }
 
 .checkout-form input,

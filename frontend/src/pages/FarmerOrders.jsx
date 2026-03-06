@@ -115,6 +115,7 @@ const OrderCard = ({ order, onViewDetails, onStatusUpdate }) => {
                 {order.items?.slice(0, 3).map((item, idx) => (
                     <div key={idx} className="preview-product">
                         <div className="preview-product-image">
+                            {console.log(item)}
                             {item.product_image ? (
                                 <img
                                     src={item.product_image}
