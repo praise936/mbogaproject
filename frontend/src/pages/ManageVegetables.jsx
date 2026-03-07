@@ -1,7 +1,8 @@
 // ManageVegetables.jsx Back
 import React, { useState, useEffect } from 'react';
 import './manageVegetables.css';
-import axios from 'axios';
+import publicApi from '../services/publicApi';
+import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
 function ManageVegetables() {
@@ -33,9 +34,9 @@ function ManageVegetables() {
     // Fetch current user
     const fetchCurrentUser = async () => {
         try {
-            const response = await axios.get('https://agr-base.onrender.com/api/auth/profile/', {
-                headers: getAuthHeader()
-            });
+            const response = await api.get('profile/')
+                
+        
             setCurrentUser(response.data);
         } catch (err) {
             if (err.response?.status === 401) {
@@ -49,8 +50,8 @@ function ManageVegetables() {
     const fetchProducts = async () => {
         try {
             setLoading(true);
-            const response = await axios.get('https://agr-base.onrender.com/api/products/my/', {
-                headers: getAuthHeader()
+            const response = await publicApi.get('products/my/', {
+                
             });
             setProducts(response.data.results || response.data || []);
             setError(null);
@@ -139,17 +140,17 @@ function ManageVegetables() {
             formDataToSend.append('quantity_available', 10);
 
             if (editingProduct) {
-                await axios.put(
-                    `https://agr-base.onrender.com//api/products/${editingProduct.id}/update/`,
-                    formDataToSend,
-                    { headers: { 'Content-Type': 'multipart/form-data', ...getAuthHeader() } }
-                );
+                await publicApi.put(
+                    `products/${editingProduct.id}/update/`,
+                    formDataToSend)
+                    
+                
             } else {
-                await axios.post(
-                    'https://agr-base.onrender.com//api/products/create/',
-                    formDataToSend,
-                    { headers: { 'Content-Type': 'multipart/form-data', ...getAuthHeader() } }
-                );
+                await publicApi.post(
+                    'products/create/',
+                    formDataToSend)
+                   
+                
             }
 
             await fetchProducts();
@@ -164,9 +165,8 @@ function ManageVegetables() {
     const handleDelete = async (productId) => {
         if (!window.confirm('Delete this product?')) return;
         try {
-            await axios.delete(`https://agr-base.onrender.com/api/products/${productId}/delete/`, {
-                headers: getAuthHeader()
-            });
+            await publicApi.delete(`products/${productId}/delete/`)            
+          
             await fetchProducts();
         } catch (err) {
             setError('Failed to delete product');
@@ -175,10 +175,10 @@ function ManageVegetables() {
 
     const toggleAvailability = async (product) => {
         try {
-            await axios.patch(
-                `https://agr-base.onrender.com/api/products/${product.id}/update/`,
+            await publicApi.patch(
+                `products/${product.id}/update/`,
                 { is_available: !product.is_available },
-                { headers: { ...getAuthHeader() } }
+                
             );
             await fetchProducts();
         } catch (err) {
