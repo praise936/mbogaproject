@@ -19,7 +19,7 @@ export function useCart(user, showNotification) {
 
     // API configuration
     const api = axios.create({
-        baseURL: 'https://agr-hub.onrender.com/api/',
+        baseURL: 'http://127.0.0.1:8000/api/',
         headers: { 'Content-Type': 'application/json' }
     });
 
