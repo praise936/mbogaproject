@@ -33,7 +33,7 @@ function ManageVegetables() {
     // Fetch current user
     const fetchCurrentUser = async () => {
         try {
-            const response = await axios.get('http://127.0.0.1:8000/api/auth/profile/', {
+            const response = await axios.get('https://agr-base.onrender.com//api/auth/profile/', {
                 headers: getAuthHeader()
             });
             setCurrentUser(response.data);
@@ -49,7 +49,7 @@ function ManageVegetables() {
     const fetchProducts = async () => {
         try {
             setLoading(true);
-            const response = await axios.get('http://127.0.0.1:8000/api/products/my/', {
+            const response = await axios.get('https://agr-base.onrender.com/api/products/my/', {
                 headers: getAuthHeader()
             });
             setProducts(response.data.results || response.data || []);
@@ -140,13 +140,13 @@ function ManageVegetables() {
 
             if (editingProduct) {
                 await axios.put(
-                    `http://127.0.0.1:8000/api/products/${editingProduct.id}/update/`,
+                    `https://agr-base.onrender.com//api/products/${editingProduct.id}/update/`,
                     formDataToSend,
                     { headers: { 'Content-Type': 'multipart/form-data', ...getAuthHeader() } }
                 );
             } else {
                 await axios.post(
-                    'http://127.0.0.1:8000/api/products/create/',
+                    'https://agr-base.onrender.com//api/products/create/',
                     formDataToSend,
                     { headers: { 'Content-Type': 'multipart/form-data', ...getAuthHeader() } }
                 );
@@ -164,7 +164,7 @@ function ManageVegetables() {
     const handleDelete = async (productId) => {
         if (!window.confirm('Delete this product?')) return;
         try {
-            await axios.delete(`http://127.0.0.1:8000/api/products/${productId}/delete/`, {
+            await axios.delete(`https://agr-base.onrender.com//api/products/${productId}/delete/`, {
                 headers: getAuthHeader()
             });
             await fetchProducts();
@@ -176,7 +176,7 @@ function ManageVegetables() {
     const toggleAvailability = async (product) => {
         try {
             await axios.patch(
-                `http://127.0.0.1:8000/api/products/${product.id}/update/`,
+                `https://agr-base.onrender.com//api/products/${product.id}/update/`,
                 { is_available: !product.is_available },
                 { headers: { ...getAuthHeader() } }
             );
