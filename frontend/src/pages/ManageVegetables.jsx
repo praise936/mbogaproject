@@ -33,7 +33,7 @@ function ManageVegetables() {
     // Fetch current user
     const fetchCurrentUser = async () => {
         try {
-            const response = await axios.get('https://agr-base.onrender.com//api/auth/profile/', {
+            const response = await axios.get('https://agr-base.onrender.com/api/auth/profile/', {
                 headers: getAuthHeader()
             });
             setCurrentUser(response.data);
@@ -164,7 +164,7 @@ function ManageVegetables() {
     const handleDelete = async (productId) => {
         if (!window.confirm('Delete this product?')) return;
         try {
-            await axios.delete(`https://agr-base.onrender.com//api/products/${productId}/delete/`, {
+            await axios.delete(`https://agr-base.onrender.com/api/products/${productId}/delete/`, {
                 headers: getAuthHeader()
             });
             await fetchProducts();
@@ -176,7 +176,7 @@ function ManageVegetables() {
     const toggleAvailability = async (product) => {
         try {
             await axios.patch(
-                `https://agr-base.onrender.com//api/products/${product.id}/update/`,
+                `https://agr-base.onrender.com/api/products/${product.id}/update/`,
                 { is_available: !product.is_available },
                 { headers: { ...getAuthHeader() } }
             );
