@@ -10,9 +10,9 @@ function ProductCard({ product, onAddToCart }) {
                     alt={product.name}
                     className="product-image"
                 />
-                {!product.is_available && (
+                {/* {!product.is_available && (
                     <span className="product-badge sold-out">Sold Out</span>
-                )}
+                )} */}
             </div>
 
             {/* Product details */}

@@ -115,10 +115,10 @@ const OrderCard = ({ order, onViewDetails, onStatusUpdate }) => {
                 {order.items?.slice(0, 3).map((item, idx) => (
                     <div key={idx} className="preview-product">
                         <div className="preview-product-image">
-                            {console.log(item)}
+                            
                             {item.product_image ? (
                                 <img
-                                    src={item.product_image}
+                                    src={item.product_image_url}
                                     alt={item.product_name}
                                     onError={(e) => e.target.style.display = 'none'}
                                 />
@@ -227,7 +227,7 @@ const OrderDetailsModal = ({ order, onClose, onStatusUpdate }) => {
                                     <div className="product-image-wrapper">
                                         {item.product_image ? (
                                             <img
-                                                src={item.product_image}
+                                                src={item.product_image_url}
                                                 alt={item.product_name}
                                                 className="product-image"
                                             />
@@ -388,8 +388,12 @@ const FarmerOrders = ({ onBack }) => {
             };
 
             const response = await publicApi.get('orders/', { params });
+            console.log(response.data);
+            
             const ordersData = response.data.results || response.data || [];
             setOrders(ordersData);
+            
+            
             setError(null);
         } catch (err) {
             setError('Failed to load orders. Please try again.');

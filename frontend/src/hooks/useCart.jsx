@@ -19,7 +19,7 @@ export function useCart(user, showNotification) {
 
     // API configuration
     const api = axios.create({
-        baseURL: 'https://agr-base.onrender.com/api/',
+        baseURL: 'http://127.0.0.1:8000/api/',
         headers: { 'Content-Type': 'application/json' }
     });
 
@@ -49,6 +49,8 @@ export function useCart(user, showNotification) {
         try {
             const response = await api.get('cart/');
             const newCartId = response.data.cart_id;
+            console.log(response.data);
+            
             setCartId(newCartId);
             localStorage.setItem('cart_id', newCartId);
             setCart(response.data.cart);
@@ -62,6 +64,8 @@ export function useCart(user, showNotification) {
         try {
             const response = await api.get(`cart/?cart_id=${cartId}`);
             setCart(response.data.cart);
+            console.log(response.data);
+            
         } catch (err) {
             console.error('Error fetching cart:', err);
             if (err.response?.status === 404) createNewCart();
@@ -78,6 +82,8 @@ export function useCart(user, showNotification) {
             });
 
             setCartId(response.data.cart_id);
+            console.log(response.data);
+            
             localStorage.setItem('cart_id', response.data.cart_id);
             setCart(response.data.cart);
             showNotification(`${product.name} added to cart!`);
@@ -124,6 +130,8 @@ export function useCart(user, showNotification) {
                 ...checkoutData,
                 cart_id: cartId
             });
+            console.log(response.data);
+            
 
             // Clear cart after successful order
             localStorage.removeItem('cart_id');

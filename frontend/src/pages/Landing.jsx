@@ -10,6 +10,7 @@ import './landing.css';
 import skuma from '../assets/fresh-sukuma.png';
 import { useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
+import publicApi from '../services/publicApi';
 
 function Landing() {
     const navigate = useNavigate();
@@ -21,15 +22,13 @@ function Landing() {
         const fetchProducts = async () => {
             try {
                 setLoading(true);
-                const response = await fetch('https://agr-base.onrender.com/api/products/');
+                const response = await publicApi.get('products/');
 
-                if (!response.ok) {
-                    throw new Error('Failed to fetch products');
-                }
+                
 
-                const data = await response.json();
-                setProducts(data.results);
-                console.log(data.results);
+                
+                setProducts(response.data.results);
+                console.log(response.data.results);
 
                 setError(null);
             } catch (err) {
@@ -150,7 +149,7 @@ function Landing() {
                 </div>
             </section>
 
-            {/* Featured Sukuma */}
+            {/* Featured Sukuma product-image-placeholder */}
             <section className="featured-section">
                 <div className="container">
                     <h2 className="section-title">Featured Sukuma</h2>
@@ -177,13 +176,13 @@ function Landing() {
                         <div className="products-grid">
                             {products.slice(0, 4).map((product) => (
                                 <div key={product.id} className="product-card">
-                                    <div className="product-image-placeholder">
-                                        {product.image ? (
-                                            <img src={product.image} alt={product.name} />
-                                        ) : (
-                                            <span>Sukuma Image</span>
-                                        )}
-                                    </div>
+                                    
+                                    {product.image ? (
+                                        <img src={product.image} alt={product.name} className='product-card-img'/>
+                                    ) : (
+                                        <span>Sukuma Image</span>
+                                    )}
+                                    
                                     <div className="product-info">
                                         <h3 className="product-name">{product.name}</h3>
                                         <p className="product-price">{formatPrice(product.price)} per {product.unit}</p>

@@ -15,7 +15,7 @@ const FarmerProducts = () => {
         try {
             setLoading(true);
             // Assuming your Django backend endpoint for farmer's products
-            const response = await fetch('http://127.0.0.1:8000/api/products/my-products/', {
+            const response = await fetch('https://agr-base.onrender.com/api/products/my/', {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
                     
