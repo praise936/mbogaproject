@@ -40,7 +40,7 @@ export function useProducts() {
             if (searchTerm) params.search = searchTerm;
 
             const response = await publicApi.get('products/', { params });
-            console.log();
+            console.log(response.data);
             
             setProducts(response.data.results || response.data || []);
             setError(null);

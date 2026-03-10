@@ -54,6 +54,8 @@ function ManageVegetables() {
                 
             });
             setProducts(response.data.results || response.data || []);
+            console.log(response.data);
+            
             setError(null);
         } catch (err) {
             if (err.response?.status === 401) {
@@ -75,7 +77,7 @@ function ManageVegetables() {
         init();
     }, []);
 
-    // Stats calculation
+    // Stats calculation mv-product-image
     const stats = {
         total: products.length,
         active: products.filter(p => p.is_available).length,

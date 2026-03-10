@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import publicApi from '../services/publicApi';
 
 export function useCart(user, showNotification) {
     // Cart state
@@ -18,17 +19,17 @@ export function useCart(user, showNotification) {
     });
 
     // API configuration
-    const api = axios.create({
-        baseURL: 'http://127.0.0.1:8000/api/',
-        headers: { 'Content-Type': 'application/json' }
-    });
+    // const api = axios.create({
+    //     baseURL: 'http://127.0.0.1:8000/api/',
+    //     headers: { 'Content-Type': 'application/json' }
+    // });
 
-    // Add token to requests
-    api.interceptors.request.use(config => {
-        const token = localStorage.getItem('access_token');
-        if (token) config.headers.Authorization = `Bearer ${token}`;
-        return config;
-    });
+    // // Add token to requests
+    // api.interceptors.request.use(config => {
+    //     const token = localStorage.getItem('access_token');
+    //     if (token) config.headers.Authorization = `Bearer ${token}`;
+    //     return config;
+    // });
 
     // Load or create cart on mount
     useEffect(() => {
@@ -47,7 +48,7 @@ export function useCart(user, showNotification) {
     // Create new cart
     const createNewCart = async () => {
         try {
-            const response = await api.get('cart/');
+            const response = await publicApi.get('cart/');
             const newCartId = response.data.cart_id;
             console.log(response.data);
             
@@ -62,7 +63,7 @@ export function useCart(user, showNotification) {
     // Fetch existing cart
     const fetchCart = async () => {
         try {
-            const response = await api.get(`cart/?cart_id=${cartId}`);
+            const response = await publicApi.get(`cart/?cart_id=${cartId}`);
             setCart(response.data.cart);
             console.log(response.data);
             
@@ -75,7 +76,7 @@ export function useCart(user, showNotification) {
     // Add item to cart
     const addToCart = async (product) => {
         try {
-            const response = await api.post('cart/add/', {
+            const response = await publicApi.post('cart/add/', {
                 product_id: product.id,
                 quantity: 1,
                 cart_id: cartId
@@ -95,7 +96,7 @@ export function useCart(user, showNotification) {
     // Update cart item quantity
     const updateCartItem = async (itemId, quantity) => {
         try {
-            const response = await api.put('cart/update/', {
+            const response = await publicApi.put('cart/update/', {
                 item_id: itemId,
                 quantity,
                 cart_id: cartId
@@ -109,7 +110,7 @@ export function useCart(user, showNotification) {
     // Remove item from cart
     const removeFromCart = async (itemId) => {
         try {
-            const response = await api.delete(`cart/remove/?cart_id=${cartId}&item_id=${itemId}`);
+            const response = await publicApi.delete(`cart/remove/?cart_id=${cartId}&item_id=${itemId}`);
             setCart(response.data.cart);
             showNotification('Item removed from cart');
         } catch (err) {
@@ -126,7 +127,7 @@ export function useCart(user, showNotification) {
 
         try {
             setSubmitting(true);
-            const response = await api.post('checkout/', {
+            const response = await publicApi.post('checkout/', {
                 ...checkoutData,
                 cart_id: cartId
             });
