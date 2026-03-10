@@ -300,11 +300,11 @@
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
-.product-image-container {
+/* .product-image-container {
     position: relative;
     aspect-ratio: 16/9;
     overflow: hidden;
-}
+} */
 
 .product-image-container {
     width: 100%;
@@ -729,7 +729,7 @@
     height: 90%;
     position: relative;
     padding-bottom: 100px;
-    overflow-y: scroll;
+    
     
 }
 
@@ -747,12 +747,15 @@
     margin-bottom: 36px;
     z-index: 1000;
     padding-bottom: -90px;
+    height: 200px;
+    width: 100%;
+    
     
 }
 
 .checkout-form input,
 .checkout-form textarea {
-    padding: 14px 16px;
+    padding: 8px 8px;
     border: 2px solid #e2e8f0;
     border-radius: 16px;
     font-size: 15px;
