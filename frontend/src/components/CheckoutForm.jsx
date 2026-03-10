@@ -36,15 +36,7 @@ function CheckoutForm({
                     })}
                 />
 
-                {/* <input
-                    type="email"
-                    placeholder="Email Address"
-                    value={checkoutData.customer_email}
-                    onChange={(e) => setCheckoutData({
-                        ...checkoutData,
-                        customer_email: e.target.value
-                    })}
-                /> */}
+                
 
                 <textarea
                     placeholder="Delivery Address *"
@@ -65,10 +57,7 @@ function CheckoutForm({
                     })}
                     rows="2"
                 />
-            </div>
-
-            {/* Order summary */}
-            <div className="checkout-summary">
+                
                 <div className="summary-row">
                     <span>Subtotal</span>
                     <span>KES {cartTotal.toFixed(2)}</span>
@@ -95,7 +84,11 @@ function CheckoutForm({
                         {submitting ? 'Processing...' : 'Place Order'}
                     </button>
                 </div>
+                
             </div>
+
+            {/* Order summary */}
+            
         </div>
     );
 }
