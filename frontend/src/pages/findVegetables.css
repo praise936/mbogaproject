@@ -749,6 +749,9 @@
     padding-bottom: -90px;
     height: 100%;
     width: 100%;
+    overflow: scroll;
+    padding-bottom: 34px;
+
     
     
 }
