@@ -36,7 +36,7 @@ function CheckoutForm({
                     })}
                 />
 
-                <input
+                {/* <input
                     type="email"
                     placeholder="Email Address"
                     value={checkoutData.customer_email}
@@ -44,7 +44,7 @@ function CheckoutForm({
                         ...checkoutData,
                         customer_email: e.target.value
                     })}
-                />
+                /> */}
 
                 <textarea
                     placeholder="Delivery Address *"
