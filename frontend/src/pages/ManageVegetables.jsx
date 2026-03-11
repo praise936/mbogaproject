@@ -273,6 +273,14 @@ function ManageVegetables() {
                 >
                     see orders
                 </button>
+                <button
+                    className="mv-add-btn"
+                    onClick={() => {
+                        navigate('/')
+                    }}
+                >
+                    Home
+                </button>
             </div>
 
             {/* Error */}
