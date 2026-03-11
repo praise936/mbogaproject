@@ -27,20 +27,21 @@ const Login = () => {
         setLoading(true);
         setLocalError('');
 
-        // Basic validation
         if (!formData.username || !formData.password) {
             setLocalError('Please fill in all fields');
             setLoading(false);
             return;
         }
 
+        console.log('Attempting login with:', formData.username);
         const result = await login(formData);
+        console.log('Login result:', result);
 
         if (result.success) {
+            console.log('Login successful, navigating to home');
             navigate('/');
-            console.log(result);
-             // or dashboard
         } else {
+            console.log('Login failed:', result.error);
             setLocalError(result.error);
         }
 
