@@ -36,6 +36,7 @@ function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/" element={<Landing />} />
+      <Route path="/market" element={<FindVegetables />} />
 
       {/* Protected routes - require authentication */}
       <Route path="/orders" element={
@@ -48,11 +49,7 @@ function AppRoutes() {
           <ManageVegetables />
         </ProtectedRoute>
       } />
-      <Route path="/market" element={
-        <ProtectedRoute>
-          <FindVegetables />
-        </ProtectedRoute>
-      } />
+      
       <Route path="/profile" element={
         <ProtectedRoute>
           <Profile />
