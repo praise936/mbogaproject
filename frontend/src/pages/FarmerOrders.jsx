@@ -1,3 +1,5 @@
+
+// frontend/src/pages/FarmerOrders.jsx
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import publicApi from '../services/publicApi';
 import './farmerOrders.css';
@@ -120,6 +122,7 @@ const OrderCard = ({ order, onViewDetails, onStatusUpdate }) => {
                                 <img
                                     src={item.product_image_url}
                                     alt={item.product_name}
+                                    loading="lazy"
                                     onError={(e) => e.target.style.display = 'none'}
                                 />
                             ) : (
@@ -230,6 +233,11 @@ const OrderDetailsModal = ({ order, onClose, onStatusUpdate }) => {
                                                 src={item.product_image_url}
                                                 alt={item.product_name}
                                                 className="product-image"
+                                                loading="lazy"
+                                                onError={(e) => {
+                                                    e.target.onerror = null;
+                                                    e.target.src = '/default-product.png';
+                                                }}
                                             />
                                         ) : (
                                             <div className="product-image-placeholder">

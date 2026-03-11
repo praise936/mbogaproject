@@ -6,13 +6,11 @@ function ProductCard({ product, onAddToCart }) {
             {/* Product image */}
             <div className="product-image-container">
                 <img
-                    src={product.image_url || '/default-product.png'}
+                    src={product.image_url || product.image || '/default-product.png'}
                     alt={product.name}
                     className="product-image"
                 />
-                {/* {!product.is_available && (
-                    <span className="product-badge sold-out">Sold Out</span>
-                )} */}
+                
             </div>
 
             {/* Product details */}
@@ -44,7 +42,7 @@ function ProductCard({ product, onAddToCart }) {
                 <button
                     className="add-button"
                     onClick={() => onAddToCart(product)}
-                    disabled={!product.is_available || product.quantity_available <= 0}
+                    disabled={!product.is_available}
                 >
                     Add to Cart
                 </button>

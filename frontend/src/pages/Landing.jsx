@@ -1,4 +1,4 @@
-// Landing.jsx
+// frontend/src/pages/Landing.jsx
 import NavigationBar from '../components/NavigationBar';
 import SearchSection from '../components/SearchSection';
 import ProductsGrid from '../components/ProductsGrid';
@@ -178,7 +178,7 @@ function Landing() {
                                 <div key={product.id} className="product-card">
                                     
                                     {product.image ? (
-                                        <img src={product.image} alt={product.name} className='product-card-img'/>
+                                        <img src={product.image_url || product.image} alt={product.name} className='product-card-img'/>
                                     ) : (
                                         <span>Sukuma Image</span>
                                     )}
